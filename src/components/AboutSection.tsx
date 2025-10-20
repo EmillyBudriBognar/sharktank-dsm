@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useInView } from 'react-intersection-observer';
-import { motion, Variants } from 'framer-motion'; // Import Variants
+import { motion, Variants } from 'framer-motion';
 import {
   Code2,
   Users,
@@ -16,7 +16,6 @@ import { GiSharkFin } from 'react-icons/gi';
 const AboutSection = () => {
   const [isMobile, setIsMobile] = useState(false);
 
-  // Textos em array
   const content = {
     title: 'O QUE É O',
     sharkText: 'SHARKTANK DSM',
@@ -71,7 +70,6 @@ const AboutSection = () => {
     ],
   };
 
-  // useInView hooks para animações
   const [headerRef, headerInView] = useInView({
     threshold: 0.3,
     triggerOnce: true,
@@ -82,35 +80,35 @@ const AboutSection = () => {
     triggerOnce: true,
   });
 
-  // Detecta se é mobile
   useEffect(() => {
-  const controller = new AbortController();
-  const { signal } = controller;
-  
-  const checkMobile = () => {
-    setIsMobile(window.innerWidth < 1024);
-  };
-  
-  checkMobile();
-  window.addEventListener('resize', checkMobile, { signal });
-  
-  return () => controller.abort();
-}, []);
+    const controller = new AbortController();
+    const { signal } = controller;
 
-  // Animação para o container principal
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 1024);
+    };
+
+    checkMobile();
+    window.addEventListener('resize', checkMobile, { signal });
+
+    return () => controller.abort();
+  }, []);
+
   const containerVariants: Variants = {
-    hidden: { opacity: 0 },
+    hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
+      y: 0,
       transition: {
-        staggerChildren: 0.2,
+        staggerChildren: 0.1,
+        duration: 0.5,
+        ease: 'easeOut',
       },
     },
   };
 
-  // Animação para os elementos filhos
   const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 20 },
     visible: {
       opacity: 1,
       y: 0,
@@ -121,18 +119,16 @@ const AboutSection = () => {
     },
   };
 
-  // Animação para os cards
   const cardVariants: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: (i: number) => ({
+    hidden: { opacity: 0, y: 20 },
+    visible: {
       opacity: 1,
       y: 0,
       transition: {
-        delay: i * 0.1,
         duration: 0.5,
         ease: 'easeOut',
       },
-    }),
+    },
     hover: {
       y: -4,
       boxShadow: '0 20px 40px rgba(239, 68, 68, 0.15)',
@@ -149,7 +145,6 @@ const AboutSection = () => {
     },
   };
 
-  // Animação para o ícone do shark
   const sharkVariants: Variants = {
     hidden: { opacity: 0, scale: 0.75 },
     visible: {
@@ -176,7 +171,6 @@ const AboutSection = () => {
       id="about"
       className="snap-section min-h-screen py-16 sm:py-32 px-4 sm:px-6 bg-white relative flex items-center overflow-hidden"
     >
-      {/* Background Elements */}
       <motion.div
         className="absolute top-10 sm:top-20 left-4 sm:left-10 w-32 h-32 sm:w-64 sm:h-64 bg-primary/5 rounded-full blur-2xl sm:blur-3xl opacity-60"
         animate={{ y: [0, -8, 0] }}
@@ -190,7 +184,6 @@ const AboutSection = () => {
       <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-96 sm:h-96 bg-accent/5 rounded-full blur-2xl sm:blur-3xl opacity-40" />
 
       <div className="max-w-6xl mx-auto relative z-10 w-full">
-        {/* Header Section */}
         <motion.div
           ref={headerRef}
           className="text-center mb-8 sm:mb-16"
@@ -232,7 +225,6 @@ const AboutSection = () => {
           </motion.div>
         </motion.div>
 
-        {/* Features Grid */}
         <motion.div
           ref={cardsRef}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
@@ -245,7 +237,6 @@ const AboutSection = () => {
             return (
               <motion.div
                 key={index}
-                custom={index}
                 variants={cardVariants}
                 whileHover={!isMobile ? 'hover' : undefined}
                 whileTap={isMobile ? 'tap' : undefined}
