@@ -48,10 +48,10 @@ const WorkshopSection = () => {
   ];
 
   // useInView hooks para animações no mobile
-  const [introRef, introInView] = useInView({ threshold: 0.3, triggerOnce: true });
-  const [imageRef, imageInView] = useInView({ threshold: 0.3, triggerOnce: true });
-  const [topicsRef, topicsInView] = useInView({ threshold: 0.2, triggerOnce: true });
-  const [judgesRef, judgesInView] = useInView({ threshold: 0.3, triggerOnce: true });
+  const [introRef, introInView] = useInView({ threshold: 0.2, triggerOnce: true, rootMargin: '-100px 0px' });
+  const [imageRef, imageInView] = useInView({ threshold: 0.2, triggerOnce: true, rootMargin: '-100px 0px' });
+  const [topicsRef, topicsInView] = useInView({ threshold: 0.1, triggerOnce: true, rootMargin: '-50px 0px' });
+  const [judgesRef, judgesInView] = useInView({ threshold: 0.2, triggerOnce: true, rootMargin: '-100px 0px' });
 
   // Variants para animações mobile
   const containerVariants: Variants = {

@@ -119,8 +119,9 @@ interface MobileWinnerPanelProps {
 
 const MobileWinnerPanel = memo(({ winner, index, content }: MobileWinnerPanelProps) => {
   const { ref, inView } = useInView({
-    threshold: 0.3,
+    threshold: 0.2,
     triggerOnce: true,
+    rootMargin: '-100px 0px',
   });
 
   const getWinnerTitle = () => {
@@ -182,8 +183,8 @@ const PhaseSection = ({
   const [isMobile, setIsMobile] = useState(false);
 
   // Hooks do useInView para os painéis estáticos no mobile
-  const [panel1Ref, panel1InView] = useInView({ threshold: 0.3, triggerOnce: true });
-  const [panel2Ref, panel2InView] = useInView({ threshold: 0.2, triggerOnce: true });
+  const [panel1Ref, panel1InView] = useInView({ threshold: 0.2, triggerOnce: true, rootMargin: '-100px 0px' });
+  const [panel2Ref, panel2InView] = useInView({ threshold: 0.1, triggerOnce: true, rootMargin: '-50px 0px' });
 
   // Hook para detectar a largura da tela e definir se é mobile
   useEffect(() => {

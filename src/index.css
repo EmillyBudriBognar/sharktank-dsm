@@ -63,8 +63,18 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    overflow-x: hidden;
+  }
+
   body {
     @apply bg-background text-foreground;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  #root {
+    min-height: 100vh;
   }
 }
 
@@ -100,6 +110,16 @@ All colors MUST be HSL.
     -webkit-overflow-scrolling: touch;
     overflow-scrolling: touch;
   }
+
+  body {
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  #root {
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
 }
 
 /* Horizontal Scroll Sections */
@@ -125,5 +145,31 @@ All colors MUST be HSL.
 @media (prefers-reduced-motion: no-preference) {
   html {
     scroll-behavior: smooth;
+  }
+}
+
+/* Ensure sections don't prevent scrolling on mobile */
+@media (max-width: 1024px) {
+  section {
+    position: relative;
+    overflow: visible;
+  }
+
+  main {
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
+
+/* Force proper scrolling on all devices */
+html, body {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+}
+
+/* Prevent horizontal scroll on mobile */
+@media (max-width: 768px) {
+  * {
+    max-width: 100%;
   }
 }

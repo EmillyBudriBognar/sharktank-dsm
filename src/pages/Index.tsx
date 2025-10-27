@@ -186,12 +186,14 @@ const Index = () => {
     // Ultra-smooth scroll configuration
     document.documentElement.style.scrollBehavior = 'smooth';
     document.body.style.overflowX = 'hidden';
+    document.body.style.overflowY = 'auto';
+    document.documentElement.style.overflowY = 'auto';
     
     // Enhanced mobile scroll performance
-    (document.body.style as any).webkitOverflowScrolling = 'touch';
+    document.body.style.webkitOverflowScrolling = 'touch';
     document.body.style.touchAction = 'pan-y';
     
-    // Prevent pull-to-refresh on mobile
+    // Prevent pull-to-refresh on mobile (optional - can be removed if not needed)
     let lastTouchY = 0;
     const preventPullToRefresh = (e: TouchEvent) => {
       const touch = e.touches[0];

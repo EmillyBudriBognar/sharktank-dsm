@@ -43,18 +43,21 @@ const FutureSection = () => {
 
   // useInView hooks para animações
   const [titleRef, titleInView] = useInView({
-    threshold: 0.3,
-    triggerOnce: true
+    threshold: 0.2,
+    triggerOnce: true,
+    rootMargin: '-100px 0px'
   });
 
   const [cardsRef, cardsInView] = useInView({
-    threshold: 0.1,
-    triggerOnce: true
+    threshold: 0.05,
+    triggerOnce: true,
+    rootMargin: '-50px 0px'
   });
 
   const [ctaRef, ctaInView] = useInView({
-    threshold: 0.3,
-    triggerOnce: true
+    threshold: 0.2,
+    triggerOnce: true,
+    rootMargin: '-100px 0px'
   });
 
   // Variants para animações

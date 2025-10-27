@@ -73,13 +73,15 @@ const AboutSection = () => {
 
   // useInView hooks para animações
   const [headerRef, headerInView] = useInView({
-    threshold: 0.3,
+    threshold: 0.2,
     triggerOnce: true,
+    rootMargin: '-100px 0px',
   });
 
   const [cardsRef, cardsInView] = useInView({
-    threshold: 0.1,
+    threshold: 0.05,
     triggerOnce: true,
+    rootMargin: '-50px 0px',
   });
 
   // Detecta se é mobile

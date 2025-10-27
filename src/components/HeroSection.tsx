@@ -24,6 +24,7 @@ const HeroSection = () => {
   const [heroRef, heroInView] = useInView({
     threshold: 0.1,
     triggerOnce: true,
+    rootMargin: '-50px 0px',
   });
 
   // Variants para animações

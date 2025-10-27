@@ -81,18 +81,21 @@ const AwardsSection = () => {
 
   // useInView hooks para animações no mobile
   const [introRef, introInView] = useInView({
-    threshold: 0.3,
-    triggerOnce: true
+    threshold: 0.2,
+    triggerOnce: true,
+    rootMargin: '-100px 0px'
   });
 
   const [carouselRefInView, carouselInView] = useInView({
-    threshold: 0.2,
-    triggerOnce: true
+    threshold: 0.1,
+    triggerOnce: true,
+    rootMargin: '-50px 0px'
   });
 
   const [totalRef, totalInView] = useInView({
-    threshold: 0.3,
-    triggerOnce: true
+    threshold: 0.2,
+    triggerOnce: true,
+    rootMargin: '-100px 0px'
   });
 
   // Detecta se é mobile
