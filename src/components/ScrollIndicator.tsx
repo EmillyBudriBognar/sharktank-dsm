@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback, memo } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import gsap from 'gsap';
 
@@ -81,6 +81,39 @@ const ScrollIndicator = () => {
       gsapContextRef.current?.revert();
     };
   }, []);
+
+  // Memoize scroll functions
+  const scrollToNext = useCallback(() => {
+    if (sectionIds.length === 0) return;
+
+    const nextIndex = Math.min(currentSectionIndex + 1, sectionIds.length - 1);
+    const nextSectionId = sectionIds[nextIndex];
+    
+    if (nextSectionId) {
+      const element = document.getElementById(nextSectionId);
+      if (element) {
+        element.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    }
+  }, [sectionIds, currentSectionIndex]);
+
+  const scrollToTop = useCallback(() => {
+    const firstSectionId = sectionIds[0];
+    if (firstSectionId) {
+      const element = document.getElementById(firstSectionId);
+      if (element) {
+        element.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'start' 
+        });
+      }
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [sectionIds]);
 
   // Configura o GSAP para detectar os tons específicos do SharkTank
   useEffect(() => {
@@ -270,38 +303,6 @@ const ScrollIndicator = () => {
     };
   }, []);
 
-  const scrollToNext = () => {
-    if (sectionIds.length === 0) return;
-
-    const nextIndex = Math.min(currentSectionIndex + 1, sectionIds.length - 1);
-    const nextSectionId = sectionIds[nextIndex];
-    
-    if (nextSectionId) {
-      const element = document.getElementById(nextSectionId);
-      if (element) {
-        element.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
-        });
-      }
-    }
-  };
-
-  const scrollToTop = () => {
-    const firstSectionId = sectionIds[0];
-    if (firstSectionId) {
-      const element = document.getElementById(firstSectionId);
-      if (element) {
-        element.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
-        });
-      }
-    } else {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
   if (sectionIds.length === 0) return null;
 
   const isLastSection = currentSectionIndex === sectionIds.length - 1;
@@ -360,4 +361,4 @@ const ScrollIndicator = () => {
   );
 };
 
-export default ScrollIndicator;
+export default memo(ScrollIndicator);

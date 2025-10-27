@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useInView } from 'react-intersection-observer';
 import { motion, Variants } from 'framer-motion';
 import { Zap } from 'lucide-react';
@@ -210,4 +211,4 @@ const HeroSection = () => {
   );
 };
 
-export default HeroSection;
+export default memo(HeroSection);

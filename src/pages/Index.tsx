@@ -1,19 +1,28 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo, Suspense, lazy } from 'react';
 import { Users2, Award, Zap } from 'lucide-react';
 import Navigation from '@/components/Navigation';
 import ScrollIndicator from '@/components/ScrollIndicator';
 import HeroSection from '@/components/HeroSection';
-import AboutSection from '@/components/AboutSection';
-import PhaseSection from '@/components/PhaseSection';
-import WorkshopSection from '@/components/WorkshopSection';
-import AwardsSection from '@/components/AwardsSection';
-import GallerySection from '@/components/GallerySection';
-import FutureSection from '@/components/FutureSection';
-import Footer from '@/components/Footer';
+
+// Lazy load sections that are below the fold
+const AboutSection = lazy(() => import('@/components/AboutSection'));
+const PhaseSection = lazy(() => import('@/components/PhaseSection'));
+const WorkshopSection = lazy(() => import('@/components/WorkshopSection'));
+const AwardsSection = lazy(() => import('@/components/AwardsSection'));
+const GallerySection = lazy(() => import('@/components/GallerySection'));
+const FutureSection = lazy(() => import('@/components/FutureSection'));
+const Footer = lazy(() => import('@/components/Footer'));
+
+// Loading fallback component
+const SectionFallback = () => (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+  </div>
+);
 
 const Index = () => {
-  // Dados da Fase 1
-  const phase1Content = {
+  // Memoize phase data to prevent unnecessary re-renders
+  const phase1Content = useMemo(() => ({
     phase: {
       title: "FASE",
       number: "1",
@@ -33,9 +42,9 @@ const Index = () => {
       champion: "🥇 CAMPEÃO",
       viceChampion: "🥈 VICE-CAMPEÃO"
     }
-  };
+  }), []);
 
-  const phase1Winners = [
+  const phase1Winners = useMemo(() => [
     { 
       position: '🥇',
       name: 'Equipe Alpha', 
@@ -77,16 +86,16 @@ const Index = () => {
       ],
       videoUrl: '/videos/warriors-demo.mp4'
     }
-  ];
+  ], []);
 
-  const phase1Stats = [
+  const phase1Stats = useMemo(() => [
     { icon: Users2, value: '8', label: 'Equipes' },
     { icon: Award, value: '2', label: 'Vencedores' },
     { icon: Zap, value: '42h', label: 'de Projeto' },
-  ];
+  ], []);
 
   // Dados da Fase 2
-  const phase2Content = {
+  const phase2Content = useMemo(() => ({
     phase: {
       title: "FASE",
       number: "2",
@@ -108,9 +117,9 @@ const Index = () => {
       viceChampion: "🥈 VICE-CAMPEÃO",
       thirdPlace: "🥉 TERCEIRO LUGAR"
     }
-  };
+  }), []);
 
-  const phase2Winners = [
+  const phase2Winners = useMemo(() => [
     {
       position: '🥇',
       name: 'Tech Masters',
@@ -174,13 +183,13 @@ const Index = () => {
       ],
       videoUrl: '/videos/future-coders-demo.mp4'
     },
-  ];
+  ], []);
 
-  const phase2Stats = [
+  const phase2Stats = useMemo(() => [
     { icon: Users2, value: '6', label: 'Equipes Finalistas' },
     { icon: Award, value: '3', label: 'Premiados' },
     { icon: Zap, value: '48h', label: 'Batalha Final' },
-  ];
+  ], []);
 
   useEffect(() => {
     // Ultra-smooth scroll configuration
@@ -213,43 +222,67 @@ const Index = () => {
         <div id="hero-section">
           <HeroSection />
         </div>
-        <div id="about-section">
-          <AboutSection />
-        </div>
-        <div id="phaseone-section">
-          <PhaseSection
-            content={phase1Content}
-            winners={phase1Winners}
-            stats={phase1Stats}
-            sectionId="phase1"
-            panelCount={4} // Intro + Overview + 2 winners
-          />
-        </div>
-        <div id="workshop-section">
-          <WorkshopSection />
-        </div>
-        <div id="phasetwo-section">
-          <PhaseSection
-            content={phase2Content}
-            winners={phase2Winners}
-            stats={phase2Stats}
-            sectionId="phase2"
-            panelCount={5} // Intro + Overview + 3 winners
-          />
-        </div>
-        <div id="awards-section">
-          <AwardsSection />
-        </div>
-        <div id="gallery-section">
-          <GallerySection />
-        </div>
-        <div id="future-section">
-          <FutureSection />
-        </div>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <div id="about-section">
+            <AboutSection />
+          </div>
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <div id="phaseone-section">
+            <PhaseSection
+              content={phase1Content}
+              winners={phase1Winners}
+              stats={phase1Stats}
+              sectionId="phase1"
+              panelCount={4}
+            />
+          </div>
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <div id="workshop-section">
+            <WorkshopSection />
+          </div>
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <div id="phasetwo-section">
+            <PhaseSection
+              content={phase2Content}
+              winners={phase2Winners}
+              stats={phase2Stats}
+              sectionId="phase2"
+              panelCount={5}
+            />
+          </div>
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <div id="awards-section">
+            <AwardsSection />
+          </div>
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <div id="gallery-section">
+            <GallerySection />
+          </div>
+        </Suspense>
+        
+        <Suspense fallback={<SectionFallback />}>
+          <div id="future-section">
+            <FutureSection />
+          </div>
+        </Suspense>
       </main>
-      <div id="footer">
-        <Footer />
-      </div>
+      
+      <Suspense fallback={<SectionFallback />}>
+        <div id="footer">
+          <Footer />
+        </div>
+      </Suspense>
     </div>
   );
 };
