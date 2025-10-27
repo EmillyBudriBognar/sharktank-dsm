@@ -153,23 +153,53 @@ All colors MUST be HSL.
   section {
     position: relative;
     overflow: visible;
+    touch-action: pan-y !important;
+    -webkit-overflow-scrolling: touch;
   }
 
   main {
     overflow: visible !important;
     height: auto !important;
+    touch-action: pan-y !important;
+  }
+
+  /* Permitir scroll touch na hero section */
+  #hero-section {
+    touch-action: pan-y !important;
+    overflow: visible !important;
   }
 }
 
 /* Force proper scrolling on all devices */
-html, body {
+html {
   -webkit-overflow-scrolling: touch;
   overflow-scrolling: touch;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  -webkit-overflow-scrolling: touch;
+  overflow-scrolling: touch;
+  touch-action: pan-y;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 /* Prevent horizontal scroll on mobile */
 @media (max-width: 768px) {
   * {
     max-width: 100%;
+  }
+
+  /* Garantir que elementos internos permitam scroll touch */
+  section > div {
+    pointer-events: auto !important;
+  }
+
+  /* Permitir scroll em todas as seções */
+  section, div, main {
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
   }
 }

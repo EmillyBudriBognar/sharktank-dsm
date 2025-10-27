@@ -99,6 +99,10 @@ const HeroSection = () => {
     <section
       ref={heroRef}
       className="relative min-h-screen flex items-center justify-center bg-gradient-to-b from-white via-red-50/30 to-white"
+      style={{
+        touchAction: 'pan-y',
+        WebkitOverflowScrolling: 'touch',
+      }}
     >
       {/* Enhanced background patterns */}
       <div className="absolute inset-0">
@@ -117,6 +121,9 @@ const HeroSection = () => {
         variants={containerVariants}
         initial="hidden"
         animate={heroInView ? 'visible' : 'hidden'}
+        style={{
+          pointerEvents: 'auto',
+        }}
       >
         {/* Decorations */}
         <motion.div

@@ -189,26 +189,19 @@ const Index = () => {
     document.body.style.overflowY = 'auto';
     document.documentElement.style.overflowY = 'auto';
     
-    // Enhanced mobile scroll performance
-    document.body.style.webkitOverflowScrolling = 'touch';
-    document.body.style.touchAction = 'pan-y';
-    
-    // Prevent pull-to-refresh on mobile (optional - can be removed if not needed)
-    let lastTouchY = 0;
-    const preventPullToRefresh = (e: TouchEvent) => {
-      const touch = e.touches[0];
-      if (touch.clientY > lastTouchY && window.scrollY === 0) {
-        e.preventDefault();
-      }
-      lastTouchY = touch.clientY;
-    };
-
-    document.body.addEventListener('touchmove', preventPullToRefresh, { passive: false });
+    // Enhanced mobile scroll performance - PERMITIR TOUCH SCROLL
+    if (window.innerWidth < 1024) {
+      document.body.style.webkitOverflowScrolling = 'touch';
+      document.body.style.touchAction = 'pan-y pan-x';
+      // Permitir scroll touch - remover qualquer bloqueio
+      document.body.style.overscrollBehavior = 'contain';
+    } else {
+      document.body.style.touchAction = 'pan-y';
+    }
     
     return () => {
       document.documentElement.style.scrollBehavior = 'auto';
       document.body.style.overflowX = 'auto';
-      document.body.removeEventListener('touchmove', preventPullToRefresh);
     };
   }, []);
 
