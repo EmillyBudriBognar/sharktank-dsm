@@ -1,7 +1,8 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { BrowserRouter, Routes, Route, lazy, Suspense } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 // Lazy load pages for code splitting
 const Index = lazy(() => import("./pages/Index"));
