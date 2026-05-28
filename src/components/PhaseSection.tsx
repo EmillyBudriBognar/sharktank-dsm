@@ -1,15 +1,13 @@
-import { useEffect, useRef, useState, memo } from 'react';
+import { useRef } from 'react';
 import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { useInView } from 'react-intersection-observer';
-import { motion, Variants } from 'framer-motion';
-import { Award, Users2, Sparkles, ChevronRight, Trophy, Zap } from 'lucide-react';
+import { Award, Users2, Sparkles, Trophy, Zap, ChevronDown } from 'lucide-react';
 import WinnerCard from './WinnerCard';
 
-// O plugin GSAP é registrado
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
-// --- TIPOS (Sem alterações) ---
+// --- TIPOS ---
 interface TeamMember {
   name: string;
   role: string;
@@ -66,398 +64,178 @@ interface PhaseSectionProps {
   panelCount: number;
 }
 
-
-// --- ANIMAÇÕES (Framer Motion Variants para Mobile) ---
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.2 },
-  },
-};
-
-const itemVariants: Variants = {
-  hidden: { opacity: 0, y: 50 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.8, ease: "easeOut" },
-  },
-};
-
-const statsVariants: Variants = {
-  hidden: { opacity: 0, scale: 0.8 },
-  visible: (i: number) => ({
-    opacity: 1,
-    scale: 1,
-    transition: { delay: i * 0.1, duration: 0.5, ease: "backOut" },
-  }),
-  hover: {
-    scale: 1.05,
-    y: -5,
-    transition: { duration: 0.3, ease: "easeInOut" },
-  },
-};
-
-const winnerCardVariants: Variants = {
-  hidden: { opacity: 0, x: -100 },
-  visible: {
-    opacity: 1,
-    x: 0,
-    transition: { duration: 0.8, ease: "easeOut" },
-  },
-};
-
-
-// --- COMPONENTE AUXILIAR PARA OS CARDS DE VENCEDORES NO MOBILE ---
-// Isso corrige a violação da "Regra dos Hooks" e organiza o código.
-interface MobileWinnerPanelProps {
-  winner: Winner;
-  index: number;
-  content: PhaseContent;
-}
-
-const MobileWinnerPanel = memo(({ winner, index, content }: MobileWinnerPanelProps) => {
-  const { ref, inView } = useInView({
-    threshold: 0.2,
-    triggerOnce: true,
-    rootMargin: '-100px 0px',
-  });
-
-  const getWinnerTitle = () => {
-    if (index === 0) return content.winners.champion;
-    if (index === 1) return content.winners.viceChampion;
-    return content.winners.thirdPlace;
-  };
-
-  const getBackgroundColor = () => {
-    if (index === 0) return 'bg-gradient-to-br from-red-50 to-white';
-    if (index === 1) return 'bg-gradient-to-br from-gray-50 to-red-50';
-    return 'bg-gradient-to-br from-red-50 to-pink-50';
-  };
-  
-  const getTextColor = () => {
-    if (index === 0) return 'text-yellow-600 border-red-200';
-    if (index === 1) return 'text-gray-600 border-gray-200';
-    return 'text-amber-700 border-red-200';
-  };
-
-  return (
-    <motion.div
-      ref={ref}
-      className={`min-h-screen flex items-center justify-center py-12 px-4 ${getBackgroundColor()}`}
-      variants={containerVariants}
-      initial="hidden"
-      animate={inView ? "visible" : "hidden"}
-    >
-      <motion.div
-        className="w-full max-w-5xl"
-        variants={winnerCardVariants}
-      >
-        <div className="text-center mb-6">
-          <span className={`text-base font-black bg-white px-4 py-1.5 rounded-full border shadow-lg ${getTextColor()}`}>
-            {getWinnerTitle()}
-          </span>
-        </div>
-        <WinnerCard
-          {...winner}
-          isChampion={index === 0}
-          isThirdPlace={index === 2}
-        />
-      </motion.div>
-    </motion.div>
-  );
-});
-
-
-// --- COMPONENTE PRINCIPAL ---
 const PhaseSection = ({
   content,
   winners,
   stats,
   sectionId,
-  backgroundColor = "bg-white",
-  panelCount
 }: PhaseSectionProps) => {
-  const sectionRef = useRef<HTMLElement>(null);
-  const [isMobile, setIsMobile] = useState(false);
+  const containerRef = useRef<HTMLElement>(null);
+  const timelineLineRef = useRef<HTMLDivElement>(null);
+  const timelineProgressRef = useRef<HTMLDivElement>(null);
 
-  // Hooks do useInView para os painéis estáticos no mobile
-  const [panel1Ref, panel1InView] = useInView({ threshold: 0.2, triggerOnce: true, rootMargin: '-100px 0px' });
-  const [panel2Ref, panel2InView] = useInView({ threshold: 0.1, triggerOnce: true, rootMargin: '-50px 0px' });
-
-  // Hook para detectar a largura da tela e definir se é mobile
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-
-  // Hook para as animações GSAP, executa APENAS em desktop
-  useEffect(() => {
-    if (isMobile) return; // Não executa nada em mobile
-
-    // gsap.context() gerencia a criação e limpeza das animações
-    const ctx = gsap.context(() => {
-      const panels: HTMLElement[] = gsap.utils.toArray(".phase-panel");
-      if (panels.length === 0) return;
-
-      const scrollTween = gsap.to(panels, {
-        xPercent: -100 * (panels.length - 1),
+  useGSAP(() => {
+    // Animate the main timeline line filling up
+    if (timelineLineRef.current && timelineProgressRef.current) {
+      gsap.to(timelineProgressRef.current, {
+        scaleY: 1,
         ease: 'none',
         scrollTrigger: {
-          trigger: sectionRef.current,
-          pin: true,
-          scrub: 1,
-          snap: 1 / (panels.length - 1),
-          end: () => `+=${sectionRef.current!.offsetWidth * (panels.length - 1)}`,
-        },
+          trigger: containerRef.current,
+          start: 'top center',
+          end: 'bottom center',
+          scrub: true,
+        }
       });
+    }
+
+    // Animate each timeline node (dot) and content
+    const nodes = gsap.utils.toArray('.timeline-node');
+    nodes.forEach((node: any) => {
+      const dot = node.querySelector('.timeline-dot');
+      const contentBox = node.querySelector('.timeline-content');
       
-      panels.forEach((panel) => {
-        const content = panel.querySelector('.panel-content');
-        if (!content) return;
-        gsap.from(content.children, {
-          y: 60,
-          opacity: 0,
-          duration: 0.8,
-          stagger: 0.1,
-          ease: 'power2.out',
-          scrollTrigger: {
-            trigger: panel,
-            containerAnimation: scrollTween,
-            start: 'left 80%',
-            toggleActions: 'play none none reverse',
-          },
-        });
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: node,
+          start: 'top 70%',
+          toggleActions: 'play none none reverse',
+        }
       });
 
-    }, sectionRef);
+      if (dot) {
+        tl.fromTo(dot, 
+          { scale: 0, opacity: 0, backgroundColor: '#f3f4f6' }, 
+          { scale: 1, opacity: 1, backgroundColor: '#dc2626', duration: 0.5, ease: 'back.out(1.5)' }
+        );
+      }
+      
+      if (contentBox) {
+        tl.fromTo(contentBox,
+          { opacity: 0, x: 50 },
+          { opacity: 1, x: 0, duration: 0.8, ease: 'power3.out' },
+          '-=0.3'
+        );
+      }
+    });
 
-    // A função de retorno do useEffect faz a limpeza automática,
-    // evitando conflitos com o React.
-    return () => ctx.revert();
+  }, { scope: containerRef });
 
-  }, [isMobile, panelCount]); 
-
-  // ==========================================================
-  // RENDERIZAÇÃO MOBILE (Scroll Vertical Padrão)
-  // ==========================================================
-  if (isMobile) {
-    return (
-      // Esta seção terá altura automática, permitindo o scroll vertical
-      <section id={sectionId} className={backgroundColor}>
-        
-        {/* Painel 1: Intro */}
-        <motion.div
-          ref={panel1Ref}
-          className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary-glow to-primary-dark relative overflow-hidden py-12 px-4"
-          variants={containerVariants}
-          initial="hidden"
-          animate={panel1InView ? "visible" : "hidden"}
-        >
-          <motion.div className="max-w-2xl text-center relative z-10" variants={containerVariants}>
-            <motion.div variants={itemVariants}>
-              <Sparkles className="mx-auto text-white mb-8" size={48} />
-            </motion.div>
-            <motion.h2 className="font-display text-5xl font-black mb-6 text-white tracking-tighter drop-shadow-2xl" variants={itemVariants}>
-              {content.phase.title} <span className="text-yellow-300 drop-shadow-[0_0_20px_rgba(253,224,71,0.5)]">{content.phase.number}</span>
-            </motion.h2>
-            <motion.div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20" variants={itemVariants}>
-              <p className="text-lg text-white/90 mb-4 font-light">
-                {content.phase.subtitle} <span className="font-semibold text-yellow-300">{content.phase.highlightedSubtitle}</span>
-                {content.phase.description && ` ${content.phase.description}`}
-              </p>
-              <div className="flex items-center justify-center gap-3">
-                <Trophy className="w-5 h-5 text-yellow-300" />
-                <span className="text-white/80 text-sm font-medium">{content.phase.stats}</span>
-                <Zap className="w-5 h-5 text-yellow-300" />
-              </div>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-
-        {/* Painel 2: Visão Geral */}
-        <motion.div
-          ref={panel2Ref}
-          className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4"
-          variants={containerVariants}
-          initial="hidden"
-          animate={panel2InView ? "visible" : "hidden"}
-        >
-          <motion.div className="max-w-4xl w-full space-y-8" variants={containerVariants}>
-            <motion.div className="space-y-6" variants={itemVariants}>
-              <div className="inline-flex items-center gap-3 bg-red-100 px-4 py-2 rounded-full">
-                <Zap className="w-4 h-4 text-red-600" />
-                <span className="text-red-600 font-semibold text-sm">{content.overview.tag}</span>
-              </div>
-              <h3 className="font-sans text-3xl font-black text-red-600">{content.overview.title}</h3>
-              <p className="text-gray-600 leading-relaxed text-base">
-                {content.overview.description}
-                <span className="font-semibold text-red-600"> {content.overview.highlightedDescription}</span> {content.phase.number === "1" ? "foram os critérios para escolha dos vencedores." : "foram os critérios decisivos para a vitória final."}
-              </p>
-              <motion.div className="grid grid-cols-3 gap-3 pt-4" variants={containerVariants}>
-                {stats.map((stat, index) => (
-                  <motion.div
-                    key={index}
-                    custom={index}
-                    variants={statsVariants}
-                    whileHover="hover"
-                    initial="hidden"
-                    animate="visible"
-                    className="text-center p-3 bg-white rounded-xl shadow-lg border border-red-100"
-                  >
-                    <stat.icon className={`w-6 h-6 mx-auto mb-2 text-red-500`} />
-                    <div className="text-xl font-black text-gray-900">{stat.value}</div>
-                    <div className="text-xs text-gray-500 font-medium">{stat.label}</div>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </motion.div>
-
-            <motion.div className="bg-white rounded-2xl p-6 shadow-xl border border-red-100 relative overflow-hidden" variants={itemVariants}>
-              <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-red-600"></div>
-              <h4 className="font-sans text-lg font-black text-red-600 mb-6 flex items-center gap-2">
-                <Trophy className="w-5 h-5" />
-                {content.overview.winnersTitle}
-              </h4>
-              <div className="space-y-4">
-                {winners.map((winner, index) => (
-                  <motion.div
-                    key={index}
-                    className="flex items-center gap-4 p-4 bg-gradient-to-r from-red-50 to-red-100 rounded-xl border border-red-200"
-                    initial={{ opacity: 0, x: -50 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.2 }}
-                  >
-                    <span className="text-2xl">{winner.medal}</span>
-                    <div className="flex-1">
-                      <div className="font-bold text-gray-900 text-base">{winner.name}</div>
-                      <div className="text-sm text-red-600 font-semibold">{winner.votes} votos</div>
-                    </div>
-                    <div className="w-2 h-8 bg-red-500 rounded-full"></div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        </motion.div>
-
-        {/* Painéis dos Vencedores (scroll vertical) */}
-        {winners.map((winner, index) => (
-          <MobileWinnerPanel 
-            key={winner.name} 
-            winner={winner} 
-            index={index} 
-            content={content} 
-          />
-        ))}
-      </section>
-    );
-  }
-
-  // ==========================================================
-  // RENDERIZAÇÃO DESKTOP (Scroll Horizontal com GSAP)
-  // ==========================================================
   return (
-    // Esta seção é travada em altura e esconde o overflow para o GSAP funcionar
-    <section ref={sectionRef} id={sectionId} className="h-screen w-full overflow-hidden">
-      <div className="flex" style={{ width: `${panelCount * 100}vw`, height: '100vh' }}>
+    <section 
+      ref={containerRef} 
+      id={sectionId} 
+      className="relative min-h-screen py-24 sm:py-32 bg-gray-50 overflow-hidden border-t border-gray-200"
+    >
+      {/* Background Decor */}
+      <div className="absolute top-1/4 left-0 w-64 h-64 bg-red-100 rounded-full blur-[100px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-red-50 rounded-full blur-[120px] pointer-events-none" />
 
-        {/* Painel 1: Intro */}
-        <div className="phase-panel w-screen h-screen flex items-center justify-center bg-gradient-to-br from-primary via-primary-glow to-primary-dark relative">
-          <div className="panel-content max-w-2xl text-center px-6 relative z-10">
-            <Sparkles className="mx-auto text-white mb-8" size={48} />
-            <h2 className="font-display text-5xl sm:text-6xl md:text-8xl font-black mb-6 text-white tracking-tighter drop-shadow-2xl">
-              {content.phase.title} <span className="text-yellow-300 drop-shadow-[0_0_20px_rgba(253,224,71,0.5)]">{content.phase.number}</span>
-            </h2>
-            <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6 border border-white/20 mb-8">
-              <p className="text-xl text-white/90 mb-4 font-light">
-                {content.phase.subtitle} <span className="font-semibold text-yellow-300">{content.phase.highlightedSubtitle}</span>
-                {content.phase.description && ` ${content.phase.description}`}
-              </p>
-              <div className="flex items-center justify-center gap-3">
-                <Trophy className="w-5 h-5 text-yellow-300" />
-                <span className="text-white/80 text-sm font-medium">{content.phase.stats}</span>
-                <Zap className="w-5 h-5 text-yellow-300" />
-              </div>
-            </div>
-            <div className="flex items-center justify-center gap-4 text-white/80 animate-pulse">
-              <ChevronRight className="w-6 h-6" />
-              <span className="text-sm font-medium bg-white/10 px-4 py-2 rounded-full">{content.phase.swipeHint}</span>
-              <ChevronRight className="w-6 h-6" />
-            </div>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+        
+        {/* Phase Header */}
+        <div className="text-center mb-24">
+          <div className="inline-flex items-center justify-center p-3 bg-red-100 rounded-full mb-6 border border-red-200">
+            <Sparkles className="w-8 h-8 text-red-600" />
           </div>
+          <h2 className="text-5xl sm:text-7xl font-black text-slate-900 tracking-tighter mb-6">
+            {content.phase.title} <span className="text-red-600 relative">
+              {content.phase.number}
+              <span className="absolute -bottom-2 left-0 w-full h-[4px] bg-red-600/20 rounded-full"></span>
+            </span>
+          </h2>
+          <p className="text-xl sm:text-2xl text-slate-600 font-medium max-w-2xl mx-auto leading-relaxed">
+            {content.phase.subtitle}{' '}
+            <span className="text-slate-900 font-bold">{content.phase.highlightedSubtitle}</span>
+            {content.phase.description && ` ${content.phase.description}`}
+          </p>
         </div>
 
-        {/* Painel 2: Visão Geral */}
-        <div className="phase-panel w-screen h-screen flex items-center justify-center bg-secondary">
-          <div className="panel-content max-w-4xl w-full px-8">
-            <div className="grid md:grid-cols-2 gap-12 items-center">
-              <div className="space-y-6">
-                <div className="inline-flex items-center gap-3 bg-red-100 px-4 py-2 rounded-full mb-2">
-                  <Zap className="w-4 h-4 text-red-600" />
-                  <span className="text-red-600 font-semibold text-sm">{content.overview.tag}</span>
-                </div>
-                <h3 className="font-sans text-4xl font-black text-red-600">{content.overview.title}</h3>
-                <p className="text-gray-600 leading-relaxed text-lg">
-                  {content.overview.description}
-                  <span className="font-semibold text-red-600"> {content.overview.highlightedDescription}</span> {content.phase.number === "1" ? "foram os critérios para escolha dos vencedores." : "foram os critérios decisivos para a vitória final."}
-                </p>
-                <div className="grid grid-cols-3 gap-4 pt-4">
-                  {stats.map((stat, index) => (
-                    <div key={index} className="text-center p-4 bg-white rounded-xl shadow-lg border border-red-100 hover:shadow-xl transition-all duration-300">
-                      <stat.icon className={`w-8 h-8 mx-auto mb-2 text-red-500`} />
-                      <div className="text-2xl font-black text-gray-900">{stat.value}</div>
-                      <div className="text-xs text-gray-500 font-medium">{stat.label}</div>
-                    </div>
-                  ))}
-                </div>
+        {/* Timeline Container */}
+        <div className="relative pl-8 sm:pl-16">
+          {/* Vertical Line */}
+          <div 
+            ref={timelineLineRef} 
+            className="absolute left-0 top-0 bottom-0 w-1 bg-gray-200 rounded-full origin-top"
+          >
+            {/* Progress Line */}
+            <div 
+              ref={timelineProgressRef} 
+              className="absolute top-0 left-0 w-full h-full bg-red-600 rounded-full origin-top scale-y-0 shadow-[0_0_15px_rgba(220,38,38,0.3)]"
+            />
+          </div>
+
+          {/* Node 1: Visão Geral */}
+          <div className="timeline-node relative mb-24 sm:mb-32">
+            <div className="timeline-dot absolute -left-8 sm:-left-16 w-6 h-6 -translate-x-[11px] sm:-translate-x-[11px] bg-white border-4 border-gray-100 rounded-full z-10" />
+            
+            <div className="timeline-content bg-white border border-gray-200 p-8 sm:p-10 rounded-3xl shadow-sm">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-50 border border-red-100 mb-6">
+                <Zap className="w-4 h-4 text-red-600" />
+                <span className="text-red-700 font-bold text-sm tracking-wide">{content.overview.tag}</span>
               </div>
-              <div className="bg-white rounded-2xl p-6 shadow-xl border border-red-100 relative overflow-hidden">
-                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 to-red-600"></div>
-                <h4 className="font-sans text-xl font-black text-red-600 mb-6 flex items-center gap-2">
-                  <Trophy className="w-5 h-5" />
+              
+              <h3 className="text-3xl sm:text-4xl font-black text-slate-900 mb-6">{content.overview.title}</h3>
+              
+              <p className="text-lg text-slate-600 leading-relaxed mb-10 max-w-3xl">
+                {content.overview.description}
+                <span className="text-slate-900 font-bold"> {content.overview.highlightedDescription}</span> {content.phase.number === "1" ? "foram os critérios para escolha dos vencedores." : "foram os critérios decisivos para a vitória final."}
+              </p>
+              
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                {stats.map((stat, index) => (
+                  <div key={index} className="flex flex-col items-center justify-center p-6 bg-gray-50 rounded-2xl border border-gray-100">
+                    <stat.icon className="w-8 h-8 text-red-600 mb-3" />
+                    <div className="text-3xl font-black text-slate-900 mb-1">{stat.value}</div>
+                    <div className="text-sm font-semibold text-slate-500 uppercase tracking-wider">{stat.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Node 2+: Vencedores */}
+          {winners.length > 0 && (
+            <div className="timeline-node relative mb-16">
+              <div className="timeline-dot absolute -left-8 sm:-left-16 w-6 h-6 -translate-x-[11px] sm:-translate-x-[11px] bg-white border-4 border-gray-100 rounded-full z-10" />
+              <div className="timeline-content">
+                <h4 className="flex items-center gap-3 text-2xl font-black text-slate-900 mb-8">
+                  <Trophy className="w-6 h-6 text-red-600" />
                   {content.overview.winnersTitle}
                 </h4>
-                <div className="space-y-4">
-                  {winners.map((winner, index) => (
-                    <div key={index} className="flex items-center gap-4 p-4 bg-gradient-to-r from-red-50 to-red-100 rounded-xl border border-red-200 hover:shadow-md transition-all duration-300">
-                      <span className="text-3xl">{winner.medal}</span>
-                      <div className="flex-1">
-                        <div className="font-bold text-gray-900 text-lg">{winner.name}</div>
-                        <div className="text-sm text-red-600 font-semibold">{winner.votes} votos</div>
-                      </div>
-                      <div className="w-2 h-8 bg-red-500 rounded-full"></div>
-                    </div>
-                  ))}
+              </div>
+            </div>
+          )}
+
+          {winners.map((winner, index) => {
+            const getWinnerLabel = () => {
+              if (index === 0) return content.winners.champion;
+              if (index === 1) return content.winners.viceChampion;
+              return content.winners.thirdPlace || `TOP ${index + 1}`;
+            };
+            
+            return (
+              <div key={winner.name} className="timeline-node relative mb-16 sm:mb-24">
+                <div className="timeline-dot absolute -left-8 sm:-left-16 w-6 h-6 -translate-x-[11px] sm:-translate-x-[11px] bg-white border-4 border-gray-100 rounded-full z-10" />
+                
+                <div className="timeline-content">
+                  <div className="mb-6 inline-block">
+                    <span className="px-4 py-2 bg-red-50 border border-red-200 rounded-full text-red-700 font-bold text-sm tracking-widest shadow-sm">
+                      {getWinnerLabel()}
+                    </span>
+                  </div>
+                  
+                  <WinnerCard
+                    {...winner}
+                    isChampion={index === 0}
+                    isThirdPlace={index === 2}
+                  />
                 </div>
               </div>
-            </div>
-          </div>
-        </div>
+            );
+          })}
 
-        {/* Painéis dos Vencedores */}
-        {winners.map((winner, index) => (
-          <div
-            key={winner.name}
-            className={`phase-panel w-screen h-screen flex items-center justify-center ${index === 0 ? 'bg-gradient-to-br from-red-50 to-white' : index === 1 ? 'bg-gradient-to-br from-gray-50 to-red-50' : 'bg-gradient-to-br from-red-50 to-pink-50'} py-8`}
-          >
-            <div className="panel-content max-w-5xl w-full px-6">
-              <div className="text-center mb-4">
-                <span className={`text-lg font-black bg-white px-4 py-1.5 rounded-full border shadow-lg ${index === 0 ? 'text-yellow-600 border-red-200' : index === 1 ? 'text-gray-600 border-gray-200' : 'text-amber-700 border-red-200'}`}>
-                  {index === 0 ? content.winners.champion : index === 1 ? content.winners.viceChampion : content.winners.thirdPlace}
-                </span>
-              </div>
-              <WinnerCard
-                {...winner}
-                isChampion={index === 0}
-                isThirdPlace={index === 2}
-              />
-            </div>
-          </div>
-        ))}
+        </div>
       </div>
     </section>
   );

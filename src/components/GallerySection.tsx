@@ -1,6 +1,7 @@
-import { useState } from 'react';
-import { useInView } from 'react-intersection-observer';
-import { motion, Variants } from 'framer-motion';
+import { useRef, useState } from 'react';
+import gsap from 'gsap';
+import { useGSAP } from '@gsap/react';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import heroImage from '@/assets/hero-shark.jpg';
 import phase1Image from '@/assets/phase1-team.jpg';
 import workshopImage from '@/assets/workshop.jpg';
@@ -8,19 +9,23 @@ import awardsImage from '@/assets/awards.jpg';
 import { Camera, Play } from 'lucide-react';
 import GalleryModal from './GalleryModal';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel';
+import { useActiveEdition } from '@/hooks/useActiveEdition';
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
 
 const GallerySection = () => {
+  const sectionRef = useRef<HTMLElement>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(0);
+  const { data } = useActiveEdition();
 
-  // Textos em array
   const content = {
-    title: "GALERIA",
-    highlightedTitle: "ÉPICA",
-    description: "Momentos inesquecíveis capturados durante o SharkTank DSM",
+    title: "O LEGADO",
+    highlightedTitle: "SHARK TANK DSM",
+    description: "Inspire-se nas mentes brilhantes que já deixaram sua marca. Veja os momentos mais épicos e inovadores das edições anteriores.",
     cta: {
-      text: "Quer ver mais? Confira o álbum completo e vídeos estendidos!",
-      button: "Ver Álbum Completo 📸"
+      text: "Quer ver como as ideias ganham vida? Confira o acervo completo e sinta a energia!",
+      button: "DESBLOQUEAR ÁLBUM COMPLETO 📸"
     },
     labels: {
       photo: "Foto",
@@ -28,7 +33,7 @@ const GallerySection = () => {
     }
   };
 
-  const galleryItems = [
+  const fallbackGalleryItems = [
     { type: 'image' as const, src: heroImage, title: 'Abertura do Evento' },
     { type: 'video' as const, title: 'Highlights da Fase 1' },
     { type: 'image' as const, src: phase1Image, title: 'Times em Ação' },
@@ -39,123 +44,82 @@ const GallerySection = () => {
     { type: 'video' as const, title: 'Depoimentos dos Campeões' },
   ];
 
-  // useInView hooks para animações
-  const [titleRef, titleInView] = useInView({
-    threshold: 0.2,
-    triggerOnce: true,
-    rootMargin: '-100px 0px'
-  });
+  const galleryItems = data?.gallery?.length > 0 ? data.gallery.map((g: any) => ({
+    type: g.image_url.includes('.mp4') || g.image_url.includes('youtube') || g.image_url.includes('vimeo') ? 'video' as const : 'image' as const,
+    src: g.image_url,
+    title: g.caption || 'Sem legenda'
+  })) : fallbackGalleryItems;
 
-  const [gridRef, gridInView] = useInView({
-    threshold: 0.1,
-    triggerOnce: true,
-    rootMargin: '-50px 0px'
-  });
+  useGSAP(() => {
+    if (!sectionRef.current) return;
 
-  const [ctaRef, ctaInView] = useInView({
-    threshold: 0.2,
-    triggerOnce: true,
-    rootMargin: '-100px 0px'
-  });
-
-  // Variants para animações
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.2
+    // Title animation
+    gsap.fromTo('.gallery-title-anim', 
+      { opacity: 0, y: 30 },
+      { 
+        opacity: 1, 
+        y: 0, 
+        duration: 0.8, 
+        stagger: 0.2,
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: '.gallery-header',
+          start: 'top 80%'
+        }
       }
-    }
-  };
+    );
 
-  const itemVariants: Variants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
+    // Grid items animation
+    gsap.fromTo('.gallery-item',
+      { opacity: 0, scale: 0.8, y: 50 },
+      {
+        opacity: 1,
+        scale: 1,
+        y: 0,
         duration: 0.6,
-        ease: "easeOut"
+        stagger: 0.1,
+        ease: 'back.out(1.5)',
+        scrollTrigger: {
+          trigger: '.gallery-grid',
+          start: 'top 75%'
+        }
       }
-    }
-  };
+    );
 
-  const gridItemVariants: Variants = {
-    hidden: { opacity: 0, x: 60, scale: 0.9 },
-    visible: (i: number) => ({
-      opacity: 1,
-      x: 0,
-      scale: 1,
-      transition: {
-        delay: i * 0.1,
+    // CTA animation
+    gsap.fromTo('.gallery-cta',
+      { opacity: 0, y: 30 },
+      {
+        opacity: 1,
+        y: 0,
         duration: 0.8,
-        ease: "easeOut"
+        ease: 'power3.out',
+        scrollTrigger: {
+          trigger: '.gallery-cta',
+          start: 'top 90%'
+        }
       }
-    }),
-    hover: {
-      y: -10,
-      scale: 1.03,
-      transition: {
-        duration: 0.3,
-        ease: "easeOut"
-      }
-    },
-    tap: {
-      scale: 0.95,
-      transition: {
-        duration: 0.1
-      }
-    }
-  };
+    );
 
-  const overlayVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.3
-      }
-    }
-  };
-
-  const contentVariants: Variants = {
-    hidden: { y: 100, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: {
-        duration: 0.4,
-        ease: "easeOut"
-      }
-    }
-  };
-
-  const buttonVariants: Variants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.4,
-        ease: "easeOut"
-      }
-    },
-    hover: {
-      scale: 1.05,
-      boxShadow: "0 10px 30px rgba(239, 68, 68, 0.4)",
-      transition: {
-        duration: 0.2,
-        ease: "easeInOut"
-      }
-    },
-    tap: {
-      scale: 0.95,
-      transition: {
-        duration: 0.1
-      }
-    }
-  };
+    // Hover effects for grid items
+    const items = gsap.utils.toArray('.gallery-item') as HTMLElement[];
+    items.forEach(item => {
+      item.addEventListener('mouseenter', () => {
+        gsap.to(item, { scale: 1.05, y: -10, duration: 0.3, ease: 'power2.out', boxShadow: '0 20px 25px -5px rgba(220, 38, 38, 0.2)' });
+        const overlay = item.querySelector('.gallery-overlay');
+        const content = item.querySelector('.gallery-content');
+        if(overlay) gsap.to(overlay, { opacity: 1, duration: 0.3 });
+        if(content) gsap.to(content, { y: 0, opacity: 1, duration: 0.3, ease: 'back.out(2)' });
+      });
+      item.addEventListener('mouseleave', () => {
+        gsap.to(item, { scale: 1, y: 0, duration: 0.3, ease: 'power2.out', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)' });
+        const overlay = item.querySelector('.gallery-overlay');
+        const content = item.querySelector('.gallery-content');
+        if(overlay) gsap.to(overlay, { opacity: 0, duration: 0.3 });
+        if(content) gsap.to(content, { y: 20, opacity: 0, duration: 0.3 });
+      });
+    });
+  }, { scope: sectionRef });
 
   const openModal = (index: number) => {
     setSelectedIndex(index);
@@ -186,124 +150,33 @@ const GallerySection = () => {
         onNavigate={handleNavigate}
       />
       
-      <section id="gallery" className="snap-section min-h-screen py-20 sm:py-32 px-4 sm:px-6 bg-white relative overflow-hidden flex items-center">
-        <div className="max-w-7xl mx-auto w-full">
+      <section id="gallery" ref={sectionRef} className="snap-section min-h-screen py-24 px-4 sm:px-6 bg-gray-50 text-slate-900 relative overflow-hidden flex items-center border-t border-gray-200">
+        <div className="absolute top-0 left-0 w-[40vw] h-[40vw] bg-red-50 rounded-full blur-[120px] pointer-events-none" />
+        
+        <div className="max-w-7xl mx-auto w-full z-10">
           {/* Header Section */}
-          <motion.div 
-            ref={titleRef}
-            className="text-center mb-8 sm:mb-12"
-            variants={containerVariants}
-            initial="hidden"
-            animate={titleInView ? "visible" : "hidden"}
-          >
-            <motion.h2 
-              className="font-display text-3xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-3 sm:mb-6 bg-gradient-to-r from-foreground via-primary to-foreground bg-clip-text text-transparent"
-              variants={itemVariants}
-            >
-              {content.title} <span className="text-primary">{content.highlightedTitle}</span>
-            </motion.h2>
-            <motion.p 
-              className="text-sm sm:text-base md:text-lg text-muted-foreground max-w-2xl mx-auto px-4"
-              variants={itemVariants}
-            >
+          <div className="gallery-header text-center mb-12 sm:mb-16">
+            <h2 className="gallery-title-anim text-4xl sm:text-6xl md:text-7xl font-black mb-4 tracking-tighter">
+              {content.title} <span className="text-red-600 relative">
+                {content.highlightedTitle}
+                <span className="absolute -bottom-2 left-0 w-full h-[4px] bg-red-600/20 rounded-full"></span>
+              </span>
+            </h2>
+            <p className="gallery-title-anim text-lg md:text-xl text-slate-600 max-w-2xl mx-auto px-4 font-medium">
               {content.description}
-            </motion.p>
-          </motion.div>
+            </p>
+          </div>
 
-          {/* Grid para desktop */}
-          <motion.div 
-            ref={gridRef}
-            className="hidden md:grid md:grid-cols-2 lg:grid-cols-4 gap-6"
-            variants={containerVariants}
-            initial="hidden"
-            animate={gridInView ? "visible" : "hidden"}
-          >
-            {galleryItems.map((item, index) => (
-              <motion.div
-                key={index}
-                custom={index}
-                variants={gridItemVariants}
-                whileHover="hover"
-                whileTap="tap"
-                onClick={() => openModal(index)}
-                className="relative group cursor-pointer rounded-2xl overflow-hidden shadow-card hover:shadow-shark transition-all duration-500 transform-gpu"
-                style={{ aspectRatio: '1/1' }}
-              >
-                {item.type === 'image' ? (
-                  <>
-                    <img 
-                      src={item.src} 
-                      alt={item.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <motion.div 
-                      className="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent"
-                      variants={overlayVariants}
-                      initial="hidden"
-                      whileHover="visible"
-                    />
-                    <motion.div 
-                      className="absolute bottom-0 left-0 right-0 p-4 text-background"
-                      variants={contentVariants}
-                      initial="hidden"
-                      whileHover="visible"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Camera size={20} />
-                        <span className="text-sm font-semibold">{content.labels.photo}</span>
-                      </div>
-                      <p className="font-display font-bold">{item.title}</p>
-                    </motion.div>
-                  </>
-                ) : (
-                  <>
-                    <div className="w-full h-full bg-gradient-overlay flex items-center justify-center">
-                      <motion.div 
-                        className="w-20 h-20 bg-primary rounded-full flex items-center justify-center"
-                        whileHover={{ scale: 1.1 }}
-                        transition={{ duration: 0.2 }}
-                      >
-                        <Play className="text-primary-foreground ml-1" size={32} />
-                      </motion.div>
-                    </div>
-                    <motion.div 
-                      className="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent"
-                      variants={overlayVariants}
-                      initial="hidden"
-                      whileHover="visible"
-                    />
-                    <motion.div 
-                      className="absolute bottom-0 left-0 right-0 p-4 text-background"
-                      variants={contentVariants}
-                      initial="hidden"
-                      whileHover="visible"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Play size={20} />
-                        <span className="text-sm font-semibold">{content.labels.video}</span>
-                      </div>
-                      <p className="font-display font-bold">{item.title}</p>
-                    </motion.div>
-                  </>
-                )}
-              </motion.div>
-            ))}
-          </motion.div>
-
-          {/* Carrossel para mobile */}
-          <div className="md:hidden px-4">
-            <Carousel className="w-full max-w-sm mx-auto">
+          {/* Carrossel para todas as telas */}
+          <div className="px-4">
+            <Carousel className="w-full max-w-sm md:max-w-3xl lg:max-w-7xl mx-auto">
               <CarouselContent>
                 {galleryItems.map((item, index) => (
-                  <CarouselItem key={index}>
-                    <motion.div
+                  <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/4">
+                    <div
                       onClick={() => openModal(index)}
-                      className="relative group cursor-pointer rounded-2xl overflow-hidden shadow-card"
+                      className="relative cursor-pointer rounded-3xl overflow-hidden shadow-md border border-gray-200"
                       style={{ aspectRatio: '1/1' }}
-                      whileTap="tap"
-                      variants={{
-                        tap: { scale: 0.95 }
-                      }}
                     >
                       {item.type === 'image' ? (
                         <>
@@ -312,64 +185,48 @@ const GallerySection = () => {
                             alt={item.title}
                             className="w-full h-full object-cover"
                           />
-                          <div className="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent" />
-                          <div className="absolute bottom-0 left-0 right-0 p-4 text-background">
-                            <div className="flex items-center gap-2 mb-2">
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
+                          <div className="absolute bottom-0 left-0 right-0 p-6 text-white group-hover:translate-y-0 transition-transform">
+                            <div className="flex items-center gap-2 mb-2 text-red-400">
                               <Camera size={18} />
-                              <span className="text-xs font-semibold">{content.labels.photo}</span>
+                              <span className="text-xs font-bold uppercase tracking-wider">{content.labels.photo}</span>
                             </div>
-                            <p className="font-display font-bold text-sm">{item.title}</p>
+                            <p className="font-bold text-lg">{item.title}</p>
                           </div>
                         </>
                       ) : (
                         <>
-                          <div className="w-full h-full bg-gradient-overlay flex items-center justify-center">
-                            <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-                              <Play className="text-primary-foreground ml-1" size={28} />
+                          <div className="w-full h-full bg-slate-100 flex items-center justify-center relative overflow-hidden">
+                            <div className="absolute inset-0 opacity-10 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjMDAwIiBmaWxsLW9wYWNpdHk9IjAuMDUiLz4KPC9zdmc+')] mix-blend-overlay"></div>
+                            <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.3)] z-10">
+                              <Play className="text-white ml-1" size={28} />
                             </div>
                           </div>
-                          <div className="absolute inset-0 bg-gradient-to-t from-primary/90 to-transparent" />
-                          <div className="absolute bottom-0 left-0 right-0 p-4 text-background">
-                            <div className="flex items-center gap-2 mb-2">
+                          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent" />
+                          <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                            <div className="flex items-center gap-2 mb-2 text-red-400">
                               <Play size={18} />
-                              <span className="text-xs font-semibold">{content.labels.video}</span>
+                              <span className="text-xs font-bold uppercase tracking-wider">{content.labels.video}</span>
                             </div>
-                            <p className="font-display font-bold text-sm">{item.title}</p>
+                            <p className="font-bold text-lg">{item.title}</p>
                           </div>
                         </>
                       )}
-                    </motion.div>
+                    </div>
                   </CarouselItem>
                 ))}
               </CarouselContent>
-              <CarouselPrevious className="left-0 -translate-x-1/2" />
-              <CarouselNext className="right-0 translate-x-1/2" />
+              <CarouselPrevious className="left-0 -translate-x-1/2 md:-translate-x-4 bg-white border-gray-200 text-slate-600 hover:bg-gray-50 hover:text-slate-900 shadow-sm" />
+              <CarouselNext className="right-0 translate-x-1/2 md:translate-x-4 bg-white border-gray-200 text-slate-600 hover:bg-gray-50 hover:text-slate-900 shadow-sm" />
             </Carousel>
-          </div>
 
-          {/* CTA Section */}
-          <motion.div 
-            ref={ctaRef}
-            className="mt-16 text-center"
-            variants={containerVariants}
-            initial="hidden"
-            animate={ctaInView ? "visible" : "hidden"}
-          >
-            <motion.p 
-              className="text-muted-foreground mb-6"
-              variants={itemVariants}
-            >
-              {content.cta.text}
-            </motion.p>
-            <motion.button 
-              className="bg-gradient-shark text-primary-foreground px-8 py-4 rounded-xl font-display font-bold text-lg"
-              variants={buttonVariants}
-              whileHover="hover"
-              whileTap="tap"
-            >
-              {content.cta.button}
-            </motion.button>
-          </motion.div>
+            <div className="mt-12 text-center">
+              <a href="/edicoes-passadas" className="inline-flex items-center gap-2 text-slate-600 hover:text-red-600 font-bold transition-colors group">
+                <span>Veja tudo sobre as edições passadas</span>
+                <span className="transform transition-transform group-hover:translate-x-1">→</span>
+              </a>
+            </div>
+          </div>
         </div>
       </section>
     </>

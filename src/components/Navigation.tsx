@@ -1,5 +1,6 @@
 import { useEffect, useState, memo } from 'react';
 import { ArrowLeft } from 'lucide-react';
+import { EditionSelector } from './EditionSelector';
 
 const Navigation = () => {
   const [scrollProgress, setScrollProgress] = useState(0);
@@ -36,6 +37,10 @@ const Navigation = () => {
           className="h-full bg-gradient-to-r from-primary via-primary-glow to-primary transition-all duration-300 shadow-glow"
           style={{ width: `${scrollProgress}%` }}
         />
+      </div>
+
+      <div className="fixed top-4 right-4 sm:top-6 sm:right-6 z-40">
+        <EditionSelector />
       </div>
 
       {/* Enhanced Back Button */}

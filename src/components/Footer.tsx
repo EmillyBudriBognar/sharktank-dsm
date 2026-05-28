@@ -1,5 +1,7 @@
 import { useInView } from 'react-intersection-observer';
 import { motion, Variants } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { Lock } from 'lucide-react';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -205,17 +207,20 @@ const Footer = () => {
         {/* Copyright */}
         <motion.div 
           ref={copyrightRef}
-          className="border-t border-red-900 pt-6 flex flex-col sm:flex-row justify-between items-center"
+          className="border-t border-red-900 pt-6 flex flex-col sm:flex-row justify-between items-center gap-4"
           variants={containerVariants}
           initial="hidden"
           animate={copyrightInView ? "visible" : "hidden"}
         >
-          <motion.p 
-            className="text-gray-100 text-sm mb-4 sm:mb-0"
-            variants={itemVariants}
-          >
-            {content.copyright.text}
-          </motion.p>
+          <motion.div className="flex flex-col sm:flex-row items-center gap-4" variants={itemVariants}>
+            <p className="text-gray-100 text-sm">
+              {content.copyright.text}
+            </p>
+            <Link to="/admin" className="flex items-center gap-1 text-xs text-red-300 hover:text-white transition-colors">
+              <Lock size={12} />
+              Acesso Restrito
+            </Link>
+          </motion.div>
           
           <motion.div 
             className="flex items-center gap-1 text-gray-100"

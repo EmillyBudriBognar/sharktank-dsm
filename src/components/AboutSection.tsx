@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
-import { useInView } from 'react-intersection-observer';
-import { motion, Variants } from 'framer-motion';
+import { useRef } from 'react';
+import { useGSAP } from '@gsap/react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import {
   Code2,
   Users,
@@ -12,440 +13,250 @@ import {
   Rocket,
 } from 'lucide-react';
 import { GiSharkFin } from 'react-icons/gi';
+import { useGlobalContent } from '@/hooks/useActiveEdition';
+
+gsap.registerPlugin(useGSAP, ScrollTrigger);
+
+const iconMap: Record<string, any> = {
+  Code2, Users, Trophy, Zap, Target, Sparkles, Award, Rocket
+};
 
 const AboutSection = () => {
-  const [isMobile, setIsMobile] = useState(false);
+  const { data } = useGlobalContent();
+  const sectionRef = useRef<HTMLElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
 
-  // Textos em array
-  const content = {
+  // Fallback / Base structure
+  const baseContent = {
     title: 'O QUE É O',
     sharkText: 'SHARKTANK DSM',
-    description:
-      'SharkTank DSM é mais do que uma competição. É uma experiência transformadora onde desenvolvedores provam suas habilidades, aprendem com os melhores e conquistam reconhecimento no mercado tech.',
+    description: data?.about_text || 'SharkTank DSM é mais do que uma competição. É uma experiência transformadora onde desenvolvedores provam suas habilidades, aprendem com os melhores e conquistam reconhecimento no mercado tech.',
     highlightedText: 'experiência transformadora',
-    features: [
+    features: data?.about?.stats?.length > 0 ? data.about.stats.map((stat: any, index: number) => {
+      const icons = [Code2, Users, Trophy, Zap];
+      return {
+        icon: iconMap[stat.icon] || icons[index % icons.length],
+        title: stat.label,
+        description: stat.description || '',
+      }
+    }) : [
       {
         icon: Code2,
-        glowIcon: Target,
         title: 'Competição de Elite',
-        description:
-          'Times batalham em desafios de programação de alto nível, resolvendo problemas reais do mercado.',
-        stats: '95% dos participantes afirmam evolução técnica',
-        gradient: 'from-purple-400 to-pink-400',
-        bgGradient: 'from-purple-50 to-pink-50',
-        borderColor: 'border-purple-200',
+        description: 'Times batalham em desafios de programação de alto nível, resolvendo problemas reais do mercado.',
       },
       {
         icon: Users,
-        glowIcon: Sparkles,
         title: 'Colaboração Inteligente',
-        description:
-          'Vencedores se tornam mentores, compartilhando conhecimento através de workshops práticos e code reviews.',
-        stats: '+50 mentores formados na última edição',
-        gradient: 'from-blue-400 to-cyan-400',
-        bgGradient: 'from-blue-50 to-cyan-50',
-        borderColor: 'border-blue-200',
+        description: 'Vencedores se tornam mentores, compartilhando conhecimento através de workshops práticos e code reviews.',
       },
       {
         icon: Trophy,
-        glowIcon: Award,
         title: 'Duas Fases Épicas',
-        description:
-          'Primeira fase elege os melhores. Segunda fase: batalha final com jurados especialistas e investidores.',
-        stats: '3 rounds eliminatórios + final ao vivo',
-        gradient: 'from-orange-400 to-red-400',
-        bgGradient: 'from-orange-50 to-red-50',
-        borderColor: 'border-orange-200',
+        description: 'Primeira fase elege os melhores. Segunda fase: batalha final com jurados especialistas e investidores.',
       },
       {
         icon: Zap,
-        glowIcon: Rocket,
         title: 'Inovação Real',
-        description:
-          'Projetos que transformam ideias em soluções tecnológicas impactantes, funcionais e escaláveis.',
-        stats: '15 startups surgiram das edições anteriores',
-        gradient: 'from-green-400 to-emerald-400',
-        bgGradient: 'from-green-50 to-emerald-50',
-        borderColor: 'border-green-200',
+        description: 'Projetos que transformam ideias em soluções tecnológicas impactantes, funcionais e escaláveis.',
       },
     ],
   };
 
-  // useInView hooks para animações
-  const [headerRef, headerInView] = useInView({
-    threshold: 0.2,
-    triggerOnce: true,
-    rootMargin: '-100px 0px',
-  });
+  const content = baseContent;
 
-  const [cardsRef, cardsInView] = useInView({
-    threshold: 0.05,
-    triggerOnce: true,
-    rootMargin: '-50px 0px',
-  });
+  useGSAP(() => {
+    // Header Animation
+    if (headerRef.current) {
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: headerRef.current,
+          start: "top 80%",
+        }
+      });
 
-  // Detecta se é mobile
-  useEffect(() => {
-    const controller = new AbortController();
-    const { signal } = controller;
-    
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-    
-    checkMobile();
-    window.addEventListener('resize', checkMobile, { signal });
-    
-    return () => controller.abort();
-  }, []);
+      tl.fromTo('.about-decor-line', 
+        { scaleX: 0 }, 
+        { scaleX: 1, duration: 0.8, ease: "power3.out" }
+      )
+      .fromTo('.about-shark-icon',
+        { opacity: 0, scale: 0, rotation: -180 },
+        { opacity: 1, scale: 1, rotation: 0, duration: 1, ease: "back.out(1.5)" },
+        "-=0.4"
+      )
+      .fromTo('.about-title',
+        { opacity: 0, y: 50, filter: 'blur(10px)' },
+        { opacity: 1, y: 0, filter: 'blur(0px)', duration: 0.8, ease: "power3.out" },
+        "-=0.6"
+      )
+      .fromTo('.about-desc',
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.8, ease: "power3.out" },
+        "-=0.4"
+      );
+    }
 
-  // Animação para o container principal
-  const containerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.3,
-        delayChildren: 0.2,
-      },
-    },
-  };
+    // Cards Animation
+    if (cardsRef.current) {
+      const cards = gsap.utils.toArray('.about-card');
+      
+      gsap.fromTo(cards,
+        { opacity: 0, y: 50, scale: 0.9 },
+        {
+          opacity: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.8,
+          stagger: 0.15,
+          ease: "back.out(1.5)",
+          scrollTrigger: {
+            trigger: cardsRef.current,
+            start: "top 85%",
+          }
+        }
+      );
 
-  // Animação para os elementos filhos
-  const itemVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
-      y: 50,
-      filter: "blur(12px)"
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      filter: "blur(0px)",
-      transition: {
-        duration: 0.8,
-        ease: [0.25, 0.46, 0.45, 0.94],
-      },
-    },
-  };
+      // Add 3D hover tilt animations via GSAP
+      cards.forEach((card: any) => {
+        const icon = card.querySelector('.about-card-icon');
+        const title = card.querySelector('.about-card-title');
+        
+        card.addEventListener('mousemove', (e: MouseEvent) => {
+          const rect = card.getBoundingClientRect();
+          const x = e.clientX - rect.left; 
+          const y = e.clientY - rect.top;  
+          
+          const centerX = rect.width / 2;
+          const centerY = rect.height / 2;
+          
+          const rotateX = ((y - centerY) / centerY) * -10; 
+          const rotateY = ((x - centerX) / centerX) * 10;
+          
+          gsap.to(card, {
+            rotateX: rotateX,
+            rotateY: rotateY,
+            transformPerspective: 1000,
+            scale: 1.05,
+            boxShadow: '0 20px 40px rgba(220, 38, 38, 0.15)',
+            borderColor: 'rgba(220, 38, 38, 0.4)',
+            ease: "power1.out",
+            duration: 0.4
+          });
+          
+          if(icon) gsap.to(icon, { scale: 1.15, rotation: 5, backgroundColor: 'rgba(220, 38, 38, 0.15)', duration: 0.3 });
+          if(title) gsap.to(title, { color: '#ef4444', duration: 0.3 });
+        });
 
-  // Animação para o título principal
-  const titleVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
-      y: 80,
-      filter: "blur(15px)"
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      filter: "blur(0px)",
-      transition: {
-        duration: 1,
-        ease: [0.25, 0.46, 0.45, 0.94],
-      },
-    },
-  };
+        card.addEventListener('mouseleave', () => {
+          gsap.to(card, {
+            rotateX: 0,
+            rotateY: 0,
+            scale: 1,
+            boxShadow: '0 4px 6px rgba(0, 0, 0, 0.05)',
+            borderColor: 'rgba(0, 0, 0, 0.05)',
+            ease: "power3.out",
+            duration: 0.6
+          });
+          if(icon) gsap.to(icon, { scale: 1, rotation: 0, backgroundColor: 'rgba(220, 38, 38, 0.05)', duration: 0.3 });
+          if(title) gsap.to(title, { color: '#0f172a', duration: 0.3 });
+        });
+      });
+    }
 
-  // Animação para a descrição
-  const descriptionVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
-      y: 40,
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.8,
-        delay: 0.4,
-        ease: "easeOut",
-      },
-    },
-  };
+    // Parallax Background Decor
+    gsap.to('.about-bg-decor-1', {
+      y: -150,
+      ease: "none",
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: "top bottom",
+        end: "bottom top",
+        scrub: true
+      }
+    });
 
-  // Container para os cards
-  const cardsContainerVariants: Variants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.5,
-      },
-    },
-  };
+    gsap.to('.about-bg-decor-2', {
+      y: 150,
+      ease: "none",
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: "top bottom",
+        end: "bottom top",
+        scrub: true
+      }
+    });
 
-  // Animação para os cards
-  const cardVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
-      y: 60,
-      scale: 0.9,
-      filter: "blur(10px)"
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      filter: "blur(0px)",
-      transition: {
-        duration: 0.7,
-        ease: [0.25, 0.46, 0.45, 0.94],
-      },
-    },
-    hover: {
-      y: -8,
-      scale: 1.03,
-      boxShadow: '0 25px 50px rgba(239, 68, 68, 0.15)',
-      borderColor: 'rgba(239, 68, 68, 0.3)',
-      transition: {
-        duration: 0.4,
-        ease: 'easeInOut',
-      },
-    },
-    tap: {
-      scale: 0.98,
-      transition: {
-        duration: 0.1,
-      },
-    },
-  };
-
-  // Animação para os ícones dos cards
-  const iconVariants: Variants = {
-    hidden: { 
-      scale: 0.5, 
-      opacity: 0,
-      rotate: -180 
-    },
-    visible: {
-      scale: 1,
-      opacity: 1,
-      rotate: 0,
-      transition: {
-        duration: 0.8,
-        delay: 0.3,
-        ease: [0.34, 1.56, 0.64, 1],
-      },
-    },
-    hover: {
-      scale: 1.15,
-      rotate: 5,
-      transition: {
-        duration: 0.3,
-        ease: "easeInOut",
-      },
-    },
-  };
-
-  // Animação para o ícone do shark
-  const sharkVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
-      scale: 0.5,
-      rotate: -45 
-    },
-    visible: {
-      opacity: 1,
-      scale: 1,
-      rotate: 0,
-      transition: {
-        delay: 0.8,
-        duration: 0.9,
-        ease: [0.34, 1.56, 0.64, 1],
-      },
-    },
-    pulse: {
-      scale: [1, 1.15, 1],
-      rotate: [0, 5, 0],
-      transition: {
-        duration: 3,
-        repeat: Infinity,
-        ease: 'easeInOut',
-      },
-    },
-  };
-
-  // Animação para as linhas decorativas
-  const lineVariants: Variants = {
-    hidden: { 
-      scaleX: 0, 
-      opacity: 0 
-    },
-    visible: {
-      scaleX: 1,
-      opacity: 1,
-      transition: {
-        duration: 0.8,
-        ease: "easeOut",
-      },
-    },
-  };
-
-  // Animação para elementos de texto dos cards
-  const cardTextVariants: Variants = {
-    hidden: { 
-      opacity: 0, 
-      y: 20 
-    },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        delay: 0.4,
-        ease: "easeOut",
-      },
-    },
-  };
-
-  // Background animations
-  const bgFloatVariants: Variants = {
-    float: {
-      y: [0, -20, 0],
-      transition: {
-        duration: 8,
-        repeat: Infinity,
-        ease: "easeInOut",
-      },
-    },
-  };
-
-  const bgFloatDelayedVariants: Variants = {
-    float: {
-      y: [0, -25, 0],
-      transition: {
-        duration: 10,
-        repeat: Infinity,
-        ease: "easeInOut",
-        delay: 2,
-      },
-    },
-  };
+  }, { scope: sectionRef });
 
   return (
     <section
+      ref={sectionRef}
       id="about"
-      className="snap-section min-h-screen py-16 sm:py-32 px-4 sm:px-6 bg-white relative flex items-center overflow-hidden"
+      className="min-h-screen py-24 sm:py-32 px-4 sm:px-6 bg-white relative flex items-center overflow-hidden border-t border-gray-100 z-10"
     >
-      {/* Background Elements */}
-      <motion.div
-        className="absolute top-10 sm:top-20 left-4 sm:left-10 w-32 h-32 sm:w-64 sm:h-64 bg-primary/5 rounded-full blur-2xl sm:blur-3xl opacity-60"
-        variants={bgFloatVariants}
-        animate="float"
-      />
-      <motion.div
-        className="absolute bottom-10 sm:bottom-20 right-4 sm:right-10 w-40 h-40 sm:w-80 sm:h-80 bg-primary/10 rounded-full blur-2xl sm:blur-3xl opacity-60"
-        variants={bgFloatDelayedVariants}
-        animate="float"
-      />
-      <motion.div 
-        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-48 h-48 sm:w-96 sm:h-96 bg-accent/5 rounded-full blur-2xl sm:blur-3xl opacity-40"
-        variants={bgFloatVariants}
-        animate="float"
-      />
+      {/* Enhanced Background Ambience */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4IiBoZWlnaHQ9IjgiPgo8cmVjdCB3aWR0aD0iOCIgaGVpZ2h0PSI4IiBmaWxsPSIjMDAwIiBmaWxsLW9wYWNpdHk9IjAuMDEiLz4KPC9zdmc+')] opacity-50 z-0"></div>
+      <div className="about-bg-decor-1 absolute top-0 right-0 w-[60vw] h-[60vw] bg-red-100 rounded-full blur-[120px] pointer-events-none mix-blend-multiply opacity-60" />
+      <div className="about-bg-decor-2 absolute bottom-0 left-0 w-[50vw] h-[50vw] bg-orange-100 rounded-full blur-[120px] pointer-events-none mix-blend-multiply opacity-50" />
 
-      <div className="max-w-6xl mx-auto relative z-10 w-full">
+      <div className="max-w-7xl mx-auto relative z-10 w-full">
         {/* Header Section */}
-        <motion.div
-          ref={headerRef}
-          className="text-center mb-8 sm:mb-16"
-          variants={containerVariants}
-          initial="hidden"
-          animate={headerInView ? 'visible' : 'hidden'}
-        >
-          <motion.div
-            variants={containerVariants}
-            className="flex items-center justify-center gap-3 sm:gap-4 mb-4 sm:mb-6"
-          >
-            <motion.div
-              variants={lineVariants}
-              className="w-8 sm:w-16 h-0.5 bg-gradient-to-r from-transparent to-primary"
-            />
-            <motion.div
-              variants={sharkVariants}
-              animate={headerInView ? ['visible', 'pulse'] : 'hidden'}
-            >
-              <GiSharkFin className="w-8 h-8 sm:w-12 sm:h-12 text-primary drop-shadow-lg" />
-            </motion.div>
-            <motion.div
-              variants={lineVariants}
-              className="w-8 sm:w-16 h-0.5 bg-gradient-to-l from-transparent to-primary"
-            />
-          </motion.div>
+        <div ref={headerRef} className="text-center mb-16 sm:mb-24">
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <div className="about-decor-line w-12 sm:w-24 h-[2px] bg-gradient-to-r from-transparent to-red-600/50 origin-right" />
+            <div className="bg-red-50 p-3 rounded-2xl border border-red-100">
+              <GiSharkFin className="about-shark-icon w-8 h-8 sm:w-10 sm:h-10 text-red-600 drop-shadow-[0_0_10px_rgba(220,38,38,0.2)]" />
+            </div>
+            <div className="about-decor-line w-12 sm:w-24 h-[2px] bg-gradient-to-l from-transparent to-red-600/50 origin-left" />
+          </div>
 
-          <motion.div variants={titleVariants}>
-            <h2 className="font-display text-2xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black mb-4 sm:mb-6 tracking-tight px-2">
-              {content.title}{' '}
-              <motion.span 
-                className="text-primary"
-                variants={titleVariants}
-              >
-                {content.sharkText}
-              </motion.span>
-            </h2>
-          </motion.div>
+          <h2 className="about-title text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black mb-6 tracking-tighter px-2 text-slate-900">
+            {content.title}{' '}
+            <span className="text-red-600 relative">
+              {content.sharkText}
+              <span className="absolute -bottom-2 left-0 w-full h-[4px] bg-red-600/20 rounded-full"></span>
+            </span>
+          </h2>
 
-          <motion.div variants={descriptionVariants}>
-            <p className="text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-foreground max-w-4xl mx-auto leading-relaxed font-semibold px-2 sm:px-4">
-              {content.description.split(content.highlightedText)[0]}
-              <span className="text-primary font-bold">
-                {content.highlightedText}
-              </span>
-              {content.description.split(content.highlightedText)[1]}
-            </p>
-          </motion.div>
-        </motion.div>
+          <p className="about-desc text-base sm:text-lg md:text-xl lg:text-2xl text-slate-600 max-w-4xl mx-auto leading-relaxed font-medium px-4">
+            {content.description.split(content.highlightedText)[0]}
+            <span className="text-red-600 font-bold bg-red-50 px-2 py-1 rounded-lg">
+              {content.highlightedText}
+            </span>
+            {content.description.split(content.highlightedText)[1]}
+          </p>
+        </div>
 
         {/* Features Grid */}
-        <motion.div
-          ref={cardsRef}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6"
-          variants={cardsContainerVariants}
-          initial="hidden"
-          animate={cardsInView ? 'visible' : 'hidden'}
-        >
+        <div ref={cardsRef} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {content.features.map((feature, index) => {
             const Icon = feature.icon;
             return (
-              <motion.div
+              <div
                 key={index}
-                variants={cardVariants}
-                whileHover={!isMobile ? 'hover' : undefined}
-                whileTap={isMobile ? 'tap' : undefined}
-                className="group bg-card border border-border rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-shark transition-all duration-300 cursor-pointer"
+                className="about-card bg-white border border-gray-100 shadow-sm rounded-2xl p-6 sm:p-8 cursor-pointer relative overflow-hidden"
               >
-                <div className="flex flex-col items-center text-center">
-                  <motion.div
-                    className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-shark rounded-lg sm:rounded-xl flex items-center justify-center mb-3 sm:mb-4"
-                    variants={iconVariants}
-                    whileHover="hover"
-                  >
-                    <Icon
-                      className="text-primary-foreground"
-                      size={isMobile ? 20 : 28}
-                    />
-                  </motion.div>
+                {/* Decorative background shape */}
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br from-red-100 to-orange-50 rounded-full blur-2xl opacity-60 pointer-events-none group-hover:scale-150 transition-transform duration-700" />
+                
+                <div className="flex flex-col items-start relative z-10">
+                  <div className="about-card-icon w-14 h-14 bg-red-50 rounded-xl flex items-center justify-center mb-6 border border-red-100">
+                    <Icon className="text-red-600" size={28} />
+                  </div>
                   
-                  <motion.h3 
-                    className="font-display text-base sm:text-lg font-bold mb-2 sm:mb-3 text-foreground group-hover:text-primary transition-colors duration-300"
-                    variants={cardTextVariants}
-                  >
+                  <h3 className="about-card-title text-xl font-bold mb-3 text-slate-900 transition-colors">
                     {feature.title}
-                  </motion.h3>
+                  </h3>
                   
-                  <motion.p 
-                    className="text-xs sm:text-sm text-muted-foreground leading-relaxed"
-                    variants={cardTextVariants}
-                  >
+                  <p className="text-sm text-slate-500 leading-relaxed font-medium">
                     {feature.description}
-                  </motion.p>
+                  </p>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
-        </motion.div>
+        </div>
       </div>
     </section>
   );

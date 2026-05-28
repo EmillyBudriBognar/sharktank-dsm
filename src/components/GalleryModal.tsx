@@ -121,7 +121,7 @@ const GalleryModal = ({ isOpen, onClose, items, currentIndex, onNavigate }: Gall
             </span>
             <button 
               onClick={handleClose} 
-              className="w-8 h-8 sm:w-10 sm:h-10 bg-white/10 hover:bg-red-500 rounded-lg flex items-center justify-center transition-colors group" 
+              className="w-8 h-8 sm:w-10 sm:h-10 bg-white/10 hover:bg-red-600 rounded-lg flex items-center justify-center transition-colors group" 
               title="Fechar"
               aria-label="Fechar"
             >
@@ -140,10 +140,10 @@ const GalleryModal = ({ isOpen, onClose, items, currentIndex, onNavigate }: Gall
               className="max-w-full max-h-[80vh] object-contain" 
             />
           ) : (
-            <div className="w-full aspect-video bg-gradient-to-br from-primary/20 to-primary/5 rounded-lg flex items-center justify-center">
+            <div className="w-full aspect-video bg-gradient-to-br from-red-600/20 to-red-600/5 rounded-lg flex items-center justify-center">
               <div className="text-center text-white p-6">
-                <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mb-4 mx-auto">
-                  <div className="w-0 h-0 border-l-[20px] border-l-primary border-y-[12px] border-y-transparent ml-1" />
+                <div className="w-16 h-16 bg-red-600/20 rounded-full flex items-center justify-center mb-4 mx-auto">
+                  <div className="w-0 h-0 border-l-[20px] border-l-red-600 border-y-[12px] border-y-transparent ml-1" />
                 </div>
                 <p className="text-lg sm:text-xl font-semibold mb-2">Vídeo em breve</p>
                 <p className="text-sm text-white/70">O conteúdo será disponibilizado em breve.</p>
@@ -159,7 +159,7 @@ const GalleryModal = ({ isOpen, onClose, items, currentIndex, onNavigate }: Gall
                   e.stopPropagation();
                   onNavigate('prev');
                 }}
-                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 border border-white/20"
+                className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 border border-white/20 hover:border-red-500/50"
                 aria-label="Anterior"
               >
                 <ChevronLeft className="text-white" size={24} />
@@ -169,7 +169,7 @@ const GalleryModal = ({ isOpen, onClose, items, currentIndex, onNavigate }: Gall
                   e.stopPropagation();
                   onNavigate('next');
                 }}
-                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 border border-white/20"
+                className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 w-10 h-10 sm:w-12 sm:h-12 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center transition-all duration-300 hover:scale-110 border border-white/20 hover:border-red-500/50"
                 aria-label="Próximo"
               >
                 <ChevronRight className="text-white" size={24} />
